@@ -7,6 +7,9 @@
 
 	// Send query to gpt document
 	const handleSubmit = async () => {
+		messages.push({ role: 'user', content: input });
+		messages = messages;
+
 		const response = await getChatResponse(input);
 		messages.push(response);
 		messages = messages;
