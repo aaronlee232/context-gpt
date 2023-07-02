@@ -9,8 +9,8 @@ import { filter } from 'unist-util-filter';
 import { toString } from 'mdast-util-to-string';
 import { toMarkdown } from 'mdast-util-to-markdown';
 import GithubSlugger from 'github-slugger';
-import { getEmbeddingsFromText, getTokenCount } from './embeddings-transformer';
-import { supabase } from '$lib/supabase';
+import { getEmbeddingFromText, getTokenCount } from './embeddings-transformer';
+import { supabase } from '$lib/scripts/supabase-client';
 
 const getMarkdownFile = async () => {
 	const file = await readFileSync('src/lib/mdx-pages/test.mdx', 'utf8');
@@ -116,13 +116,10 @@ const insertEmbeddingsIntoDB = async (sectionsData: SectionData[]) => {
 			token_count: sectionData.token_count,
 			embedding: sectionData.embedding
 		});
-		console.log(result);
 	});
 };
 
 const generateEmbeddings = async () => {
-	console.log(supabase);
-
 	const { sections } = await processMarkdown();
 
 	const sectionsData: SectionData[] = [];
@@ -130,7 +127,7 @@ const generateEmbeddings = async () => {
 		const data: SectionData = {
 			content: section.content,
 			token_count: await getTokenCount(section.content),
-			embedding: await getEmbeddingsFromText(section.content)
+			embedding: await getEmbeddingFromText(section.content)
 		};
 		sectionsData.push(data);
 	}

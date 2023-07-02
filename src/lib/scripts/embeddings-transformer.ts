@@ -3,7 +3,7 @@ import { AutoTokenizer } from '@xenova/transformers';
 
 const generateEmbeddings = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
-export const getEmbeddingsFromText = async (text: string): Promise<number[]> => {
+export const getEmbeddingFromText = async (text: string): Promise<number[]> => {
 	const embeddings = await generateEmbeddings(text, {
 		pooling: 'mean',
 		normalize: true
