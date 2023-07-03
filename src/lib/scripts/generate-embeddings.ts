@@ -11,11 +11,7 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import GithubSlugger from 'github-slugger';
 import { getEmbeddingFromText, getTokenCount } from './embeddings-transformer';
 import { supabase } from '$lib/scripts/supabase-client';
-
-const getMarkdownFile = async () => {
-	const file = await readFileSync('src/lib/mdx-pages/test.mdx', 'utf8');
-	return file;
-};
+import { getAllFiles } from './read-documents';
 
 type Section = {
 	content: string;
@@ -27,7 +23,7 @@ type ProcessedMD = {
 	sections: Section[];
 };
 
-const processMarkdown = async (): Promise<ProcessedMD> => {
+const processMarkdown = async (doc: string): Promise<ProcessedMD> => {
 	/**
 	 * Splits a `mdast` tree into multiple trees based on
 	 * a predicate function. Will include the splitting node
@@ -49,12 +45,8 @@ const processMarkdown = async (): Promise<ProcessedMD> => {
 		}, []);
 	};
 
-	const doc = await getMarkdownFile();
 	// @ts-ignore
-	const mdxTree = fromMarkdown(doc, {
-		extensions: [mdxjs()],
-		mdastExtensions: [mdxFromMarkdown()]
-	});
+	const mdxTree = fromMarkdown(doc);
 
 	// ignore meta(?)
 
@@ -119,17 +111,23 @@ const insertEmbeddingsIntoDB = async (sectionsData: SectionData[]) => {
 	});
 };
 
+const BASE_PAGES_PATH = 'src/lib/md-pages/';
+
 const generateEmbeddings = async () => {
-	const { sections } = await processMarkdown();
+	const files = getAllFiles(BASE_PAGES_PATH);
 
 	const sectionsData: SectionData[] = [];
-	for (const section of sections) {
-		const data: SectionData = {
-			content: section.content,
-			token_count: await getTokenCount(section.content),
-			embedding: await getEmbeddingFromText(section.content)
-		};
-		sectionsData.push(data);
+	for (let file of files) {
+		const { sections } = await processMarkdown(file);
+
+		for (const section of sections) {
+			const data: SectionData = {
+				content: section.content,
+				token_count: await getTokenCount(section.content),
+				embedding: await getEmbeddingFromText(section.content)
+			};
+			sectionsData.push(data);
+		}
 	}
 
 	await insertEmbeddingsIntoDB(sectionsData);

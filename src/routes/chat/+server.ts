@@ -53,9 +53,6 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const aiEmbedding = await getEmbeddingFromText(aiMessage);
 
-	console.log('aiResponse:', aiResponse);
-	console.log('aiMessage:', aiMessage);
-
 	// Add current query embedding to ConversationEmbeddingStore
 	ConversationStore.update((conversations: Conversation[]) => {
 		const currentConversations = [
@@ -131,7 +128,7 @@ const getContextText = async (
 ) => {
 	const { error: matchError, data: pageSections } = await supabase.rpc('match_page_sections', {
 		embedding,
-		match_threshold: 0.3,
+		match_threshold: 0.2,
 		match_count: 10,
 		min_content_length: 50
 	});

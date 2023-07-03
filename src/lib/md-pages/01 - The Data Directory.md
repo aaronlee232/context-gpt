@@ -1,3 +1,10 @@
+---
+tags: [Basics, Notebooks/Tutorial]
+title: 01 - The Data Directory
+created: '2018-12-16T21:43:52.886Z'
+modified: '2019-06-06T12:20:10.890Z'
+---
+
 # 01 - The Data Directory
 
 The data directory is where all your notes and attachments will be stored, it has the following structure:
