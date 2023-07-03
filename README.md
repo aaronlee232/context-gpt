@@ -126,3 +126,5 @@ On one hand, it enabled me to restrict the LLM from straying from the contents o
 ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 
 - [@gregnr](https://github.com/supabase/supabase/commits?author=gregnr) - Supabase's Cippy tutorial was very helpful in understanding the implementation behind an AI assistant who could answer based on a set of provided documents
+
+- [Vivek](https://towardsdatascience.com/when-should-you-fine-tune-llms-2dddc09a404a)'s article on whether or not to fine-tune a model is what led me to the idea of using embeddings
