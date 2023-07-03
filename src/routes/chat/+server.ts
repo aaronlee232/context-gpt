@@ -45,8 +45,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const aiResponse = response.data.choices[0];
-	const aiMessage = String(aiResponse.message?.content);
+	const aiMessage = aiResponse.message?.content?.toString();
+
+	if (!aiMessage) {
+		throw new Error('No response message from ai');
+	}
+
 	const aiEmbedding = await getEmbeddingFromText(aiMessage);
+
+	console.log('aiResponse:', aiResponse);
+	console.log('aiMessage:', aiMessage);
 
 	// Add current query embedding to ConversationEmbeddingStore
 	ConversationStore.update((conversations: Conversation[]) => {
@@ -275,6 +283,9 @@ const createMessagesWithPrompt = (
           `}
           ${oneLine`
             - Output as markdown with code snippets if available.
+          `}
+					${oneLine`
+            - Put any code snippet in their own paragraph.
           `}
         `
 		},

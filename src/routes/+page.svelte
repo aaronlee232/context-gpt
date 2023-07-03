@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Markdown from '@magidoc/plugin-svelte-marked';
 	import getChatResponse from '$lib/api-requests/get-chat-response';
 	import type { Message } from '$lib/types/globals';
 
@@ -16,11 +17,12 @@
 	};
 </script>
 
-<ul>
+<div>
 	{#each messages as message}
-		<li>{message.role}: {message.content}</li>
+		<Markdown source={`${message.role}: ${message.content.toString()}`} />
+		<br />
 	{/each}
-</ul>
+</div>
 
 <form on:submit={handleSubmit}>
 	<input bind:value={input} />
