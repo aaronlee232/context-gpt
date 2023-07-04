@@ -45,24 +45,25 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const aiResponse = response.data.choices[0];
-	const aiMessage = aiResponse.message?.content?.toString();
+	const aiMessage = aiResponse.message;
+	const aiMessageContent = aiMessage?.content?.toString();
 
-	if (!aiMessage) {
-		throw new Error('No response message from ai');
+	if (!aiMessageContent) {
+		throw new Error('No response message content from ai');
 	}
 
-	const aiEmbedding = await getEmbeddingFromText(aiMessage);
+	const aiEmbedding = await getEmbeddingFromText(aiMessageContent);
 
 	// Add current query embedding to ConversationEmbeddingStore
 	ConversationStore.update((conversations: Conversation[]) => {
 		const currentConversations = [
 			{ content: `user: ${sanitizedQuery}`, embedding: embedding }, // query
-			{ content: `assistant: ${aiMessage}`, embedding: aiEmbedding } // ai response
+			{ content: `assistant: ${aiMessageContent}`, embedding: aiEmbedding } // ai response
 		];
 		return [...currentConversations, ...conversations];
 	});
 
-	return json(aiResponse);
+	return json({ aiMessage, contextText, conversationText });
 };
 
 const moderateQuery = async (sanitizedQuery: string) => {
@@ -128,7 +129,7 @@ const getContextText = async (
 ) => {
 	const { error: matchError, data: pageSections } = await supabase.rpc('match_page_sections', {
 		embedding,
-		match_threshold: 0.2,
+		match_threshold: 0.3,
 		match_count: 10,
 		min_content_length: 50
 	});
@@ -150,7 +151,9 @@ const getContextText = async (
 			break;
 		}
 
-		contextText += `${content.trim()}\n---\n`;
+		contextText += `${content.trim()}\n==IGNORE==Similarity Score: ${
+			pageSection.similarity
+		}==/IGNORE==\n---\n`;
 	}
 	return contextText;
 };
@@ -180,7 +183,8 @@ const getConversationText = async (
 			break;
 		}
 
-		conversationText += `${content.trim()}\n---\n`;
+		conversationText += `${content.trim()}\n==IGNORE==Similarity Score: Recent
+					==/IGNORE==\n---\n`;
 	}
 
 	// Match current query embedding with past query embeddings and include most relevant ones in contextText
@@ -205,7 +209,9 @@ const getConversationText = async (
 			break;
 		}
 
-		conversationText += `${content.trim()}\n---\n`;
+		conversationText += `${content.trim()}\n==IGNORE==Similarity Score: ${
+			conversation.similarity
+		}==/IGNORE==\n---\n`;
 	}
 
 	return conversationText;
@@ -270,6 +276,9 @@ const createMessagesWithPrompt = (
 					${oneLine`
             - You can use messages in conversation history as context to answer my next question.
           `}
+					${oneLine`
+						Ignore the text between ==IGNORE== and ==/IGNORE== in the personal documentation and conversation history.
+					`}
           ${oneLine`
             - If you are unsure and the answer is not explicitly written
             in the documentation context, say
